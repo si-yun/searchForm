@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>test</title>
+</head>
+<body>
+  
+  <script>
+    var vue = new Vue({
+      el:'#app',
+      data:{
+        board_list:[],
+        searchForm:{
+          pageSize:'10',
+          totalCnt:'0',
+          searchText:'',
+          searCHType:'',
+        },
+        created(){
+          this.clickBtnSearch();
+        },
+        methods:{
+          clickBtnSearch:function(){
+            console.log("검색");
+            var sendData = Object.assign({},this.searchForm);
+            //sendData에  searchForm의 데이터를 복사하여 넣어줌
+            var vm = this;
+            axios.post({
+              url:"/board/List",
+              params:sendData, //post로 전송할 데이터
+            },function(data){
+              vm.board_list = data.result;
+              vm.searchForm.totalCnt = data.result.lengh;
+            })
+          },
+          nextPage: function(sysBoardMasterSeq, typeCd) {
+                        location.href = ("./admin_detail_view_page.html?sysBoardMasterSeq=" + sysBoardMasterSeq + "&typeCd=" + typeCd)
+          },
+          createPage: function() {
+
+              location.href = ("./detail_view_page.html")
+          },
+        }
+      }
+    })
+  </script>
+  <div class="container">
+        <div id="content" v-cloak>
+            <select v-model="searchForm.searchType">
+                <option value="TITLE">제목</option>
+                <option value="TITLEANDCONT">제목+내용</option>
+            </select>
+
+            <input type="text" v-model="searchForm.searchText">
+            <input type="button" value="검색" @click="search()">
+            <select v-model="searchForm.pageSize" @change="search() ">
+                    <option value="10">10개</option>
+                    <option value="20">20개</option>
+                    <option value="30">30개</option>
+                    <option value="40">40개</option>
+            </select>
+            <br>
+            <br>
+            <div>
+                총 {{searchForm.totalCnt}}개의 검색 결과가 있습니다.
+            </div>
+            <div colspan="10" class="NO_RESULT" v-if="board_list.length == 0">
+                조회된 데이터가 없습니다.
+            </div>
+            <ul>
+                <li id="board_list" v-for="(data,index) in board_list" :key="index" v-if="board_list.length > 0">
+                    <div v-show="(data.typeCd)=='1001'">{{data.typeCd}}</div>
+                    <div> {{data.sysBoardMasterSeq}}</div>
+                    <div>{{_formatedDatepicker(data.regDttm)}}</div>
+                    <div>{{data.readCnt}}</div>
+                    <div>첨부파일</div>
+                    <div><a href="javascript:void(0);" @click="nextPage(data.sysBoardMasterSeq,data.typeCd)">{{data.title}}</a></div>
+                </li>
+            </ul>
+            <div v-if="board_list.length > 0">
+                처음 { 1 234..910} 끝
+            </div>
+            <input type="button" value="등록" @click="createPage()">
+        </div>
+  </div>
+</body>
+</html>
